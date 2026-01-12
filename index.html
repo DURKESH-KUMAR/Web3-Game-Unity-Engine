@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Blockchain Racing Game Portal</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Montserrat:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+      :root {
+        --primary: #ff2d55;
+        --secondary: #0077ff;
+        --accent: #00ffaa;
+        --dark: #0a0a1a;
+        --darker: #050510;
+        --light: #ffffff;
+      }
+      
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: 'Montserrat', sans-serif;
+        background-color: var(--dark);
+        color: var(--light);
+        min-height: 100vh;
+      }
+      
+      /* Layout */
+      #app-container {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      
+      #header {
+        padding: 1rem 2rem;
+        background: rgba(0, 0, 20, 0.9);
+        border-bottom: 1px solid var(--primary);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+      }
+      
+      .logo {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 1.8rem;
+        color: var(--primary);
+      }
+      
+      .nav-links {
+        display: flex;
+        gap: 1.5rem;
+      }
+      
+      .nav-link {
+        color: var(--light);
+        text-decoration: none;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+      }
+      
+      .nav-link:hover {
+        background: rgba(255, 45, 85, 0.1);
+      }
+      
+      .nav-link.active {
+        color: var(--primary);
+        border-bottom: 2px solid var(--primary);
+      }
+      
+      #main-content {
+        flex: 1;
+        padding: 2rem;
+      }
+      
+      .page-section {
+        display: none;
+        max-width: 1400px;
+        margin: 0 auto;
+        width: 100%;
+      }
+      
+      .page-section.active {
+        display: block;
+        animation: fadeIn 0.5s ease;
+      }
+      
+      .section-title {
+        font-family: 'Orbitron', sans-serif;
+        color: var(--primary);
+        margin-bottom: 2rem;
+        text-align: center;
+        font-size: 2.2rem;
+      }
+      
+      /* Login Page */
+      #login-section {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+      }
+      
+      .login-container {
+        background: rgba(0, 10, 30, 0.9);
+        border: 1px solid var(--primary);
+        border-radius: 10px;
+        padding: 3rem;
+        max-width: 500px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 0 30px rgba(255, 45, 85, 0.2);
+      }
+      
+      .login-title {
+        font-family: 'Orbitron', sans-serif;
+        color: var(--primary);
+        margin-bottom: 1.5rem;
+        font-size: 2rem;
+      }
+      
+      #connectWallet {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        font-size: 1.1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        font-weight: bold;
+        margin-top: 2rem;
+      }
+      
+      #connectWallet:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(255, 45, 85, 0.4);
+      }
+      
+      .wallet-info {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: rgba(0, 20, 40, 0.6);
+        border-radius: 8px;
+        border-left: 3px solid var(--primary);
+        display: none;
+      }
+      
+      .wallet-address {
+        font-family: monospace;
+        word-break: break-all;
+        background: rgba(0,0,0,0.3);
+        padding: 0.8rem;
+        border-radius: 5px;
+        display: inline-block;
+        margin-top: 0.8rem;
+      }
+      
+      /* Home Page */
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+      }
+      
+      .wallet-card {
+        background: rgba(0, 10, 30, 0.9);
+        border: 1px solid var(--secondary);
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+      }
+      
+      .wallet-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      
+      .wallet-avatar {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+      }
+      
+      .wallet-details h2 {
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+      }
+      
+      .wallet-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+      }
+      
+      .stat-card {
+        background: rgba(0, 20, 40, 0.6);
+        border-radius: 10px;
+        padding: 1.5rem;
+        border-left: 3px solid var(--primary);
+      }
+      
+      .stat-label {
+        font-size: 0.9rem;
+        color: var(--light);
+        margin-bottom: 0.5rem;
+        opacity: 0.8;
+      }
+      
+      .stat-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: var(--primary);
+      }
+      
+      .nft-marketplace {
+        background: rgba(0, 10, 30, 0.9);
+        border: 1px solid var(--secondary);
+        border-radius: 10px;
+        padding: 2rem;
+      }
+      
+      .nft-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+      }
+      
+      .nft-card {
+        background: rgba(0, 20, 40, 0.6);
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.3s ease;
+      }
+      
+      .nft-card:hover {
+        transform: translateY(-5px);
+      }
+      
+      .nft-image {
+        height: 200px;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+      }
+      
+      .nft-details {
+        padding: 1rem;
+      }
+      
+      .nft-name {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: var(--primary);
+      }
+      
+      .nft-price {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+      }
+      
+      .price-value {
+        font-weight: bold;
+      }
+      
+      .buy-button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      
+      /* Games Page */
+      .game-start-container {
+        background: rgba(0, 10, 30, 0.9);
+        border: 1px solid var(--secondary);
+        border-radius: 10px;
+        padding: 3rem;
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+      
+      .start-game-button {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        font-size: 1.2rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 2rem;
+        font-weight: bold;
+      }
+      
+      .start-game-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(255, 45, 85, 0.4);
+      }
+      
+      #unity-container {
+        width: 100%;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 30px rgba(255, 45, 85, 0.2);
+        display: none;
+      }
+      
+      #unity-canvas {
+        width: 100%;
+        height: 600px;
+      }
+      
+      /* Marketplace Page */
+      .marketplace-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+      }
+      
+      .marketplace-card {
+        background: rgba(0, 10, 30, 0.9);
+        border: 1px solid var(--secondary);
+        border-radius: 10px;
+        padding: 1.5rem;
+      }
+      
+      .players-map {
+        height: 400px;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-top: 1rem;
+      }
+      
+      .info-graphics {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-top: 2rem;
+      }
+      
+      .info-card {
+        background: rgba(0, 20, 40, 0.6);
+        border-radius: 10px;
+        padding: 1.5rem;
+      }
+      
+      /* Docs Page */
+      .docs-container {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 2rem;
+      }
+      
+      .docs-sidebar {
+        position: sticky;
+        top: 120px;
+        height: fit-content;
+      }
+      
+      .docs-nav {
+        list-style: none;
+        background: rgba(0, 10, 30, 0.9);
+        border-radius: 10px;
+        padding: 1rem;
+        border: 1px solid var(--secondary);
+      }
+      
+      .docs-nav-item {
+        margin-bottom: 0.5rem;
+      }
+      
+      .docs-nav-link {
+        color: var(--light);
+        text-decoration: none;
+        display: block;
+        padding: 0.8rem 1rem;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+      }
+      
+      .docs-nav-link:hover {
+        background: rgba(255, 45, 85, 0.1);
+        color: var(--primary);
+      }
+      
+      .docs-nav-link.active {
+        background: rgba(255, 45, 85, 0.2);
+        color: var(--primary);
+        border-left: 3px solid var(--primary);
+      }
+      
+      .docs-content {
+        background: rgba(0, 10, 30, 0.9);
+        border-radius: 10px;
+        padding: 2rem;
+        border: 1px solid var(--secondary);
+      }
+      
+      .docs-section {
+        margin-bottom: 3rem;
+      }
+      
+      .docs-section-title {
+        font-family: 'Orbitron', sans-serif;
+        color: var(--primary);
+        margin-bottom: 1.5rem;
+        font-size: 1.8rem;
+      }
+      
+      .leaderboard-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1.5rem;
+      }
+      
+      .leaderboard-table th {
+        background: rgba(255, 45, 85, 0.2);
+        padding: 1rem;
+        text-align: left;
+      }
+      
+      .leaderboard-table td {
+        padding: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      .leaderboard-table tr:last-child td {
+        border-bottom: none;
+      }
+      
+      /* Footer */
+      .footer {
+        padding: 2rem;
+        text-align: center;
+        background: rgba(0, 0, 20, 0.9);
+        border-top: 1px solid var(--primary);
+      }
+      
+      /* Animations */
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      /* Responsive */
+      @media (max-width: 1200px) {
+        .dashboard-grid,
+        .marketplace-grid {
+          grid-template-columns: 1fr;
+        }
+        
+        .docs-container {
+          grid-template-columns: 1fr;
+        }
+        
+        .docs-sidebar {
+          position: static;
+        }
+      }
+      
+      @media (max-width: 768px) {
+        #header {
+          flex-direction: column;
+          gap: 1rem;
+          padding: 1rem;
+        }
+        
+        .nav-links {
+          width: 100%;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+        
+        .wallet-header {
+          flex-direction: column;
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Login Page -->
+    <div id="login-section">
+      <div class="login-container">
+        <h1 class="login-title">BLOCKCHAIN RACING GAME</h1>
+        <p>Connect your wallet to access the ultimate blockchain racing experience</p>
+        <button id="connectWallet">
+          <span id="button-text">CONNECT WALLET</span>
+          <span id="button-loader" style="display: none;"><i class="fas fa-spinner fa-spin"></i></span>
+        </button>
+        <div class="wallet-info" id="wallet-info">
+          <p>Connected Wallet:</p>
+          <p class="wallet-address" id="wallet-address"></p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Main App (hidden until login) -->
+    <div id="app-container" style="display: none;">
+      <header id="header">
+        <div class="logo">RACING GAME PORTAL</div>
+        <div class="nav-links">
+          <a href="#" class="nav-link active" data-page="home">Home</a>
+          <a href="#" class="nav-link" data-page="games">Games</a>
+          <a href="#" class="nav-link" data-page="marketplace">Marketplace</a>
+          <a href="#" class="nav-link" data-page="docs">Docs</a>
+        </div>
+      </header>
+      
+      <main id="main-content">
+        <!-- Home Page -->
+        <section id="home-section" class="page-section active">
+          <h1 class="section-title">PLAYER DASHBOARD</h1>
+          
+          <div class="dashboard-grid">
+            <div class="wallet-card">
+              <div class="wallet-header">
+                <div class="wallet-avatar" id="wallet-avatar">R</div>
+                <div class="wallet-details">
+                  <h2 id="wallet-name">Red Racer</h2>
+                  <p class="wallet-address" id="wallet-address-display">0x2...C355</p>
+                </div>
+              </div>
+              
+              <div class="wallet-stats">
+                <div class="stat-card">
+                  <div class="stat-label">Balance</div>
+                  <div class="stat-value" id="wallet-balance">0.42 ETH</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-label">Races Won</div>
+                  <div class="stat-value" id="races-won">18</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-label">NFTs Owned</div>
+                  <div class="stat-value" id="nfts-owned">7</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-label">Leaderboard</div>
+                  <div class="stat-value" id="leaderboard-rank">#24</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="nft-marketplace">
+              <h2>NFT MARKETPLACE</h2>
+              <p>Buy and sell racing car NFTs to enhance your gameplay</p>
+              
+              <div class="nft-grid">
+                <div class="nft-card">
+                  <div class="nft-image">
+                    <i class="fas fa-car"></i>
+                  </div>
+                  <div class="nft-details">
+                    <h3 class="nft-name">Speed Demon</h3>
+                    <p>Increases top speed by 15%</p>
+                    <div class="nft-price">
+                      <span class="price-value">0.1 ETH</span>
+                      <button class="buy-button">Buy</button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="nft-card">
+                  <div class="nft-image">
+                    <i class="fas fa-bolt"></i>
+                  </div>
+                  <div class="nft-details">
+                    <h3 class="nft-name">Turbo Boost</h3>
+                    <p>50% faster acceleration</p>
+                    <div class="nft-price">
+                      <span class="price-value">0.15 ETH</span>
+                      <button class="buy-button">Buy</button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="nft-card">
+                  <div class="nft-image">
+                    <i class="fas fa-shield-alt"></i>
+                  </div>
+                  <div class="nft-details">
+                    <h3 class="nft-name">Armor Plating</h3>
+                    <p>Reduces damage by 30%</p>
+                    <div class="nft-price">
+                      <span class="price-value">0.12 ETH</span>
+                      <button class="buy-button">Buy</button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="nft-card">
+                  <div class="nft-image">
+                    <i class="fas fa-gas-pump"></i>
+                  </div>
+                  <div class="nft-details">
+                    <h3 class="nft-name">Fuel Injector</h3>
+                    <p>25% longer boost duration</p>
+                    <div class="nft-price">
+                      <span class="price-value">0.08 ETH</span>
+                      <button class="buy-button">Buy</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Games Page -->
+        <section id="games-section" class="page-section">
+          <h1 class="section-title">DEAD MAN TELL NO TALE</h1>
+          
+          <div class="game-start-container">
+            <h2>READY TO RACE?</h2>
+            <p>Connect your wallet and prepare for the ultimate blockchain racing experience</p>
+            <button class="start-game-button" id="start-game-button">
+              START GAME
+            </button>
+          </div>
+          
+          <div id="unity-container" class="unity-desktop">
+            <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
+            <div id="unity-loading-bar">
+              <div id="unity-logo"></div>
+              <div id="unity-progress-bar-empty">
+                <div id="unity-progress-bar-full"></div>
+              </div>
+            </div>
+            <div id="unity-warning"></div>
+            <div id="unity-footer">
+              <div id="unity-fullscreen-button"></div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Marketplace Page -->
+        <section id="marketplace-section" class="page-section">
+          <h1 class="section-title">GLOBAL MARKETPLACE</h1>
+          
+          <div class="marketplace-grid">
+            <div class="marketplace-card">
+              <h2>PLAYER LOCATIONS</h2>
+              <p>Real-time map of active racers worldwide</p>
+              <div class="players-map" id="players-map"></div>
+            </div>
+            
+            <div class="marketplace-card">
+              <h2>ACTIVITY STATS</h2>
+              <p>Current player engagement metrics</p>
+              <canvas id="players-chart" height="300"></canvas>
+            </div>
+          </div>
+          
+          <div class="info-graphics">
+            <div class="info-card">
+              <h3>Top Countries</h3>
+              <canvas id="countries-chart" height="200"></canvas>
+            </div>
+            
+            <div class="info-card">
+              <h3>Peak Hours</h3>
+              <canvas id="hours-chart" height="200"></canvas>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Docs Page -->
+        <section id="docs-section" class="page-section">
+          <h1 class="section-title">GAME DOCUMENTATION</h1>
+          
+          <div class="docs-container">
+            <div class="docs-sidebar">
+              <ul class="docs-nav">
+                <li class="docs-nav-item"><a href="#overview" class="docs-nav-link active">Overview</a></li>
+                <li class="docs-nav-item"><a href="#gameplay" class="docs-nav-link">Gameplay</a></li>
+                <li class="docs-nav-item"><a href="#nfts" class="docs-nav-link">NFT System</a></li>
+                <li class="docs-nav-item"><a href="#economy" class="docs-nav-link">Game Economy</a></li>
+                <li class="docs-nav-item"><a href="#leaderboard" class="docs-nav-link">Leaderboard</a></li>
+                <li class="docs-nav-item"><a href="#tech" class="docs-nav-link">Technology</a></li>
+              </ul>
+            </div>
+            
+            <div class="docs-content">
+              <div id="overview" class="docs-section">
+                <h2 class="docs-section-title">Game Overview</h2>
+                <p>"Dead Man Tell No Tale" is a high-speed blockchain racing game where players compete on the Ethereum network. All vehicles, upgrades, and rewards are stored as NFTs on the blockchain, giving players true ownership of their assets.</p>
+                <p>The game combines traditional racing mechanics with blockchain technology, allowing players to earn cryptocurrency rewards, trade assets, and compete in a decentralized ecosystem.</p>
+              </div>
+              
+              <div id="gameplay" class="docs-section">
+                <h2 class="docs-section-title">Gameplay Mechanics</h2>
+                <p>The core gameplay features include:</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                  <li>Real-time multiplayer racing against players worldwide</li>
+                  <li>Skill-based racing with drifting, boosting, and drafting mechanics</li>
+                  <li>Dynamic weather and track conditions that affect gameplay</li>
+                  <li>NFT-based vehicles with unique attributes and performance characteristics</li>
+                  <li>Upgrade system using in-game tokens and NFTs</li>
+                </ul>
+              </div>
+              
+              <div id="nfts" class="docs-section">
+                <h2 class="docs-section-title">NFT System</h2>
+                <p>The game utilizes several types of NFTs:</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                  <li><strong>Vehicle NFTs</strong>: Unique cars with different stats (speed, handling, acceleration)</li>
+                  <li><strong>Part NFTs</strong>: Upgrades for vehicles (engines, tires, armor)</li>
+                  <li><strong>Cosmetic NFTs</strong>: Skins, paints, and visual customizations</li>
+                  <li><strong>Track NFTs</strong>: Player-owned race tracks that generate revenue</li>
+                </ul>
+                <p>All NFTs can be traded on the built-in marketplace or external NFT platforms.</p>
+              </div>
+              
+              <div id="economy" class="docs-section">
+                <h2 class="docs-section-title">Game Economy</h2>
+                <p>The game features a dual-token economy:</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                  <li><strong>RACE Token (ERC-20)</strong>: Earned through gameplay, used for upgrades and entry fees</li>
+                  <li><strong>ETH</strong>: Used for purchasing NFTs and premium content</li>
+                </ul>
+                <p>Players can earn through:</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                  <li>Winning races and tournaments</li>
+                  <li>Completing challenges and achievements</li>
+                  <li>Renting out NFT assets to other players</li>
+                  <li>Trading NFTs on the marketplace</li>
+                </ul>
+              </div>
+              
+              <div id="leaderboard" class="docs-section">
+                <h2 class="docs-section-title">Global Leaderboard</h2>
+                <p>The current top players in the game:</p>
+                <table class="leaderboard-table">
+                  <thead>
+                    <tr>
+                      <th>Rank</th>
+                      <th>Player</th>
+                      <th>Wins</th>
+                      <th>Earnings</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>1</td>
+                      <td>CryptoRacer</td>
+                      <td>142</td>
+                      <td>12.5 ETH</td>
+                    </tr>
+                    <tr>
+                      <td>2</td>
+                      <td>BlockSpeed</td>
+                      <td>128</td>
+                      <td>10.2 ETH</td>
+                    </tr>
+                    <tr>
+                      <td>3</td>
+                      <td>NFTDemon</td>
+                      <td>115</td>
+                      <td>9.8 ETH</td>
+                    </tr>
+                    <tr>
+                      <td>4</td>
+                      <td>EtherRider</td>
+                      <td>98</td>
+                      <td>8.5 ETH</td>
+                    </tr>
+                    <tr>
+                      <td>5</td>
+                      <td>DeFiDrifter</td>
+                      <td>87</td>
+                      <td>7.2 ETH</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              <div id="tech" class="docs-section">
+                <h2 class="docs-section-title">Technology Stack</h2>
+                <p>The game was built using:</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                  <li><strong>Frontend</strong>: Unity WebGL, HTML5, CSS3, JavaScript</li>
+                  <li><strong>Blockchain</strong>: Ethereum, Solidity, Web3.js</li>
+                  <li><strong>Backend</strong>: Node.js, Express, MongoDB</li>
+                  <li><strong>Storage</strong>: IPFS for decentralized asset storage</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+      
+      <footer class="footer">
+        <p>Blockchain Racing Game Portal © 2025 | Powered by Ethereum</p>
+      </footer>
+    </div>
+
+    <script>
+      // Unity game configuration
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/trial 2.loader.js";
+      var config = {
+        dataUrl: buildUrl + "/trial 2.data",
+        frameworkUrl: buildUrl + "/trial 2.framework.js",
+        codeUrl: buildUrl + "/trial 2.wasm",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "DEAD MAN TELL NO TAIL",
+        productVersion: "0.1",
+      };
+      
+      // DOM elements
+      const loginSection = document.getElementById('login-section');
+      const appContainer = document.getElementById('app-container');
+      const connectBtn = document.getElementById('connectWallet');
+      const buttonText = document.getElementById('button-text');
+      const buttonLoader = document.getElementById('button-loader');
+      const walletInfo = document.getElementById('wallet-info');
+      const walletAddress = document.getElementById('wallet-address');
+      const startGameBtn = document.getElementById('start-game-button');
+      const unityContainer = document.getElementById('unity-container');
+      
+      // Initialize map
+      function initMap() {
+        const map = L.map('players-map').setView([20, 0], 2);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Sample player locations
+        const playerLocations = [
+          { lat: 40.7128, lng: -74.0060, name: 'Player1' }, // New York
+          { lat: 34.0522, lng: -118.2437, name: 'Player2' }, // Los Angeles
+          { lat: 51.5074, lng: -0.1278, name: 'Player3' }, // London
+          { lat: 35.6762, lng: 139.6503, name: 'Player4' }, // Tokyo
+          { lat: 48.8566, lng: 2.3522, name: 'Player5' }, // Paris
+          { lat: -33.8688, lng: 151.2093, name: 'Player6' }, // Sydney
+          { lat: 22.3193, lng: 114.1694, name: 'Player7' }, // Hong Kong
+          { lat: 55.7558, lng: 37.6173, name: 'Player8' }, // Moscow
+          { lat: 19.4326, lng: -99.1332, name: 'Player9' }, // Mexico City
+          { lat: 23.1291, lng: 113.2644, name: 'Player10' } // Guangzhou
+        ];
+        
+        // Add player markers
+        playerLocations.forEach(location => {
+          L.marker([location.lat, location.lng])
+            .addTo(map)
+            .bindPopup(`<b>${location.name}</b><br>Currently racing`);
+        });
+      }
+      
+      // Initialize charts
+      function initCharts() {
+        // Players online chart
+        const playersCtx = document.getElementById('players-chart').getContext('2d');
+        new Chart(playersCtx, {
+          type: 'line',
+          data: {
+            labels: ['12AM', '3AM', '6AM', '9AM', '12PM', '3PM', '6PM', '9PM'],
+            datasets: [{
+              label: 'Players Online',
+              data: [120, 90, 150, 200, 350, 420, 380, 300],
+              borderColor: '#ff2d55',
+              backgroundColor: 'rgba(255, 45, 85, 0.1)',
+              fill: true,
+              tension: 0.4
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                display: false
+              }
+            }
+          }
+        });
+        
+        // Countries chart
+        const countriesCtx = document.getElementById('countries-chart').getContext('2d');
+        new Chart(countriesCtx, {
+          type: 'doughnut',
+          data: {
+            labels: ['USA', 'UK', 'Japan', 'Germany', 'Others'],
+            datasets: [{
+              data: [35, 20, 15, 10, 20],
+              backgroundColor: [
+                '#ff2d55',
+                '#0077ff',
+                '#00ffaa',
+                '#ff9500',
+                '#5856d6'
+              ]
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'bottom'
+              }
+            }
+          }
+        });
+        
+        // Hours chart
+        const hoursCtx = document.getElementById('hours-chart').getContext('2d');
+        new Chart(hoursCtx, {
+          type: 'bar',
+          data: {
+            labels: ['8AM', '12PM', '4PM', '8PM', '12AM'],
+            datasets: [{
+              label: 'Active Players',
+              data: [150, 320, 280, 420, 380],
+              backgroundColor: '#0077ff'
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                display: false
+              }
+            }
+          }
+        });
+      }
+      
+      // Setup page navigation
+      function setupNavigation() {
+        const navLinks = document.querySelectorAll('.nav-link');
+        const pageSections = document.querySelectorAll('.page-section');
+        
+        navLinks.forEach(link => {
+          link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const page = link.getAttribute('data-page');
+            
+            // Update active nav link
+            navLinks.forEach(navLink => navLink.classList.remove('active'));
+            link.classList.add('active');
+            
+            // Show selected page
+            pageSections.forEach(section => section.classList.remove('active'));
+            document.getElementById(`${page}-section`).classList.add('active');
+            
+            // Initialize map if on marketplace page
+            if (page === 'marketplace') {
+              initMap();
+            }
+          });
+        });
+      }
+      
+      // Load Unity game
+      function loadUnityGame() {
+        const container = document.querySelector("#unity-container");
+        const canvas = document.querySelector("#unity-canvas");
+        const loadingBar = document.querySelector("#unity-loading-bar");
+        const progressBarFull = document.querySelector("#unity-progress-bar-full");
+        const fullscreenButton = document.querySelector("#unity-fullscreen-button");
+        const warningBanner = document.querySelector("#unity-warning");
+        
+        function unityShowBanner(msg, type) {
+          function updateBannerVisibility() {
+            warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+          }
+          var div = document.createElement('div');
+          div.innerHTML = msg;
+          warningBanner.appendChild(div);
+          if (type == 'error') div.style = 'background: red; padding: 10px;';
+          else {
+            if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+            setTimeout(function() {
+              warningBanner.removeChild(div);
+              updateBannerVisibility();
+            }, 5000);
+          }
+          updateBannerVisibility();
+        }
+        
+        config.showBanner = unityShowBanner;
+        
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+          var meta = document.createElement('meta');
+          meta.name = 'viewport';
+          meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+          document.getElementsByTagName('head')[0].appendChild(meta);
+          container.className = "unity-mobile";
+          canvas.className = "unity-mobile";
+        } else {
+          canvas.style.width = "100%";
+          canvas.style.height = "600px";
+        }
+        
+        loadingBar.style.display = "block";
+        unityContainer.style.display = "block";
+        
+        var script = document.createElement("script");
+        script.src = loaderUrl;
+        script.onload = () => {
+          createUnityInstance(canvas, config, (progress) => {
+            progressBarFull.style.width = 100 * progress + "%";
+          }).then((unityInstance) => {
+            loadingBar.style.display = "none";
+            fullscreenButton.onclick = () => {
+              unityInstance.SetFullscreen(1);
+            };
+          }).catch((message) => {
+            alert(message);
+          });
+        };
+        document.body.appendChild(script);
+      }
+      
+      // Connect wallet handler
+      connectBtn.addEventListener('click', async () => {
+        try {
+          // Show loading state
+          buttonText.style.display = 'none';
+          buttonLoader.style.display = 'inline-block';
+          connectBtn.disabled = true;
+          
+          if (window.ethereum) {
+            window.web3 = new Web3(window.ethereum);
+            try {
+              const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+              const address = accounts[0];
+              
+              // Display wallet info
+              walletAddress.textContent = address;
+              walletInfo.style.display = 'block';
+              
+              // Update displayed wallet info
+              document.getElementById('wallet-address-display').textContent = 
+                `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+              
+              // Hide login and show app
+              setTimeout(() => {
+                loginSection.style.display = 'none';
+                appContainer.style.display = 'flex';
+                
+                // Initialize charts, map and navigation
+                initCharts();
+                setupNavigation();
+              }, 1000);
+              
+            } catch (error) {
+              console.error('User denied account access:', error);
+              resetConnectButton();
+            }
+          } else {
+            alert('Please install MetaMask or another Web3 wallet to play this game');
+            resetConnectButton();
+          }
+        } catch (error) {
+          console.error('Error connecting wallet:', error);
+          resetConnectButton();
+        }
+      });
+      
+      // Start game handler
+      startGameBtn.addEventListener('click', () => {
+        startGameBtn.style.display = 'none';
+        loadUnityGame();
+      });
+      
+      function resetConnectButton() {
+        buttonText.style.display = 'inline-block';
+        buttonLoader.style.display = 'none';
+        connectBtn.disabled = false;
+      }
+      
+      // Check if wallet is already connected
+      window.addEventListener('load', () => {
+        if (window.ethereum && window.ethereum.selectedAddress) {
+          connectBtn.click();
+        }
+      });
+    </script>
+  </body>
+</html>
